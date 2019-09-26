@@ -10,7 +10,7 @@ def seqsearch(nbrs, target):
 
 
 def recbinsearch(L, l, u, target):
-    mid = (l + u) // 2
+    mid = (l + u)// 2
     if l > u:
         return -1
     if L[mid] == target:
