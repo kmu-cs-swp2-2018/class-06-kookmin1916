@@ -3,7 +3,7 @@ import sys
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import *
 
-dbfilename = 'scoreDB.dat'
+dbfilename = 'test3_4.dat'
 
 
 def readScoreDB():
@@ -87,7 +87,7 @@ class ScoreDBWindow(QWidget):
             vbox.addLayout(i)
 
         self.setLayout(vbox)
-        self.setWindowTitle("blank_title")
+        self.setWindowTitle("Score DB")
         self.showScoreDB()
         self.show()
 
@@ -106,7 +106,7 @@ class ScoreDBWindow(QWidget):
         if finding_name is None:
             filtered_scdb = self._scdb
         else:
-            filtered_scdb = list(filter(lambda score_data: score_data["Name"] == finding_name, self._scdb))
+            filtered_scdb = list(filter(lambda data: data["Name"] == finding_name, self._scdb))
 
         for p in sorted(filtered_scdb, key=lambda person: person[self._combo_box.currentText()]):
             for attr in sorted(p):
@@ -123,7 +123,7 @@ class ScoreDBWindow(QWidget):
             self.showScoreDB()
 
         elif clicked_button == "Del":
-            self._scdb = list(filter(lambda score_data: score_data["Name"] != name, self._scdb))
+            self._scdb = list(filter(lambda data: data["Name"] != name, self._scdb))
             self.showScoreDB()
 
         elif clicked_button == "Find":
@@ -139,7 +139,8 @@ class ScoreDBWindow(QWidget):
             self.showScoreDB()
 
 
-scoredb = readScoreDB()
-app = QApplication(sys.argv)
-window = ScoreDBWindow(scoredb)
-sys.exit(app.exec_())
+if __name__ == "__main__":
+    scoredb = readScoreDB()
+    app = QApplication(sys.argv)
+    window = ScoreDBWindow(scoredb)
+    sys.exit(app.exec_())
