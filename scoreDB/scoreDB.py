@@ -33,10 +33,10 @@ def writeScoreDB(scdb):
 class ScoreDBWindow(QWidget):
     def __init__(self, scdb):
         super().__init__()
-        self._scdb = scdb
-        self._line_edits = []
-        self._text_edit = QTextEdit(self)
-        self._combo_box = QComboBox(self)
+        self.__scdb = scdb
+        self.__line_edits = []
+        self.__text_edit = QTextEdit(self)
+        self.__combo_box = QComboBox(self)
         self.initUI()
 
     def initUI(self):
@@ -46,9 +46,9 @@ class ScoreDBWindow(QWidget):
         strings_of_input_cells = ["Name: ", "Age: ", "Score: ", "Amount: "]
         input_cells = []
         for i in range(4):
-            self._line_edits.append(QLineEdit(self))
+            self.__line_edits.append(QLineEdit(self))
             input_cells.append([QLabel(strings_of_input_cells[i], self),
-                                self._line_edits[i]])
+                                self.__line_edits[i]])
 
         hbox.append(QHBoxLayout())
         line_cnt += 1
@@ -63,8 +63,8 @@ class ScoreDBWindow(QWidget):
         hbox[line_cnt].addWidget(input_cells[3][1])
 
         hbox[line_cnt].addWidget(QLabel("Key: "))
-        self._combo_box.addItems(["Name", "Age", "Score"])
-        hbox[line_cnt].addWidget(self._combo_box)
+        self.__combo_box.addItems(["Name", "Age", "Score"])
+        hbox[line_cnt].addWidget(self.__combo_box)
 
         hbox.append(QHBoxLayout())
         line_cnt += 1
@@ -80,7 +80,7 @@ class ScoreDBWindow(QWidget):
 
         hbox.append(QHBoxLayout())
         line_cnt += 1
-        hbox[line_cnt].addWidget(self._text_edit)
+        hbox[line_cnt].addWidget(self.__text_edit)
 
         vbox = QVBoxLayout()
         for i in hbox:
@@ -95,7 +95,7 @@ class ScoreDBWindow(QWidget):
         clicked_button = QMessageBox.question(self, "종료", "정말 끄시겠습니까?",
                                               QMessageBox.Yes | QMessageBox.No)
         if clicked_button == QMessageBox.Yes:
-            writeScoreDB(self._scdb)
+            writeScoreDB(self.__scdb)
             event.accept()
         else:
             event.ignore()
@@ -104,33 +104,33 @@ class ScoreDBWindow(QWidget):
         output_string = ""
 
         if finding_name is None:
-            filtered_scdb = self._scdb
+            filtered_scdb = self.__scdb
         else:
-            filtered_scdb = list(filter(lambda data: data["Name"] == finding_name, self._scdb))
+            filtered_scdb = list(filter(lambda data: data["Name"] == finding_name, self.__scdb))
 
-        for p in sorted(filtered_scdb, key=lambda person: person[self._combo_box.currentText()]):
+        for p in sorted(filtered_scdb, key=lambda person: person[self.__combo_box.currentText()]):
             for attr in sorted(p):
                 output_string += attr + "=" + p[attr] + "\t\t"
             output_string += "\n"
-        self._text_edit.setPlainText(output_string)
+        self.__text_edit.setPlainText(output_string)
 
     def buttonClicked(self):
         sender = self.sender()
         clicked_button = sender.text()
-        name, age, score, amount = [line_edit.text() for line_edit in self._line_edits]
+        name, age, score, amount = [line_edit.text() for line_edit in self.__line_edits]
         if clicked_button == "Add":
-            self._scdb += [{'Name': name, 'Age': age, 'Score': score}]
+            self.__scdb += [{'Name': name, 'Age': age, 'Score': score}]
             self.showScoreDB()
 
         elif clicked_button == "Del":
-            self._scdb = list(filter(lambda data: data["Name"] != name, self._scdb))
+            self.__scdb = list(filter(lambda data: data["Name"] != name, self.__scdb))
             self.showScoreDB()
 
         elif clicked_button == "Find":
             self.showScoreDB(name)
 
         elif clicked_button == "Inc":
-            for score_data in self._scdb:
+            for score_data in self.__scdb:
                 if score_data["Name"] == name:
                     score_data["Score"] = str(int(score_data["Score"]) + int(amount))
             self.showScoreDB()
