@@ -3,7 +3,7 @@ import sys
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import *
 
-dbfilename = 'test3_4.dat'
+dbfilename = 'scoreDB.dat'
 
 
 def readScoreDB():
