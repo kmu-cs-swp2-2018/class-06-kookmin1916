@@ -143,10 +143,9 @@ class ScoreDBWindow(QWidget):
             self.showScoreDB(name)
 
         elif clicked_button == "Inc":
-            if amount != "":
-                for score_data in self.__scdb:
-                    if score_data["Name"] == name:
-                        score_data["Score"] = str(int(score_data["Score"]) + int(amount))
+            for score_data in self.__scdb:
+                if score_data["Name"] == name:
+                    score_data["Score"] = str(int(score_data["Score"]) + int(amount))
             self.showScoreDB()
 
         elif clicked_button == "Show":
