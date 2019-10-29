@@ -1,4 +1,5 @@
 import pickle
+import re
 import sys
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import *
@@ -28,6 +29,13 @@ def writeScoreDB(scdb):
     fH = open(dbfilename, 'wb')
     pickle.dump(scdb, fH)
     fH.close()
+
+
+def parseInt(parsing_string):
+    result = re.findall('\d+', parsing_string)
+    if len(result) == 0:
+        return 0
+    return result[0]
 
 
 class ScoreDBWindow(QWidget):
@@ -118,6 +126,11 @@ class ScoreDBWindow(QWidget):
         sender = self.sender()
         clicked_button = sender.text()
         name, age, score, amount = [line_edit.text() for line_edit in self.__line_edits]
+
+        age = str(parseInt(age))
+        score = str(parseInt(score))
+        amount = str(parseInt(amount))
+
         if clicked_button == "Add":
             self.__scdb += [{'Name': name, 'Age': age, 'Score': score}]
             self.showScoreDB()
@@ -130,9 +143,10 @@ class ScoreDBWindow(QWidget):
             self.showScoreDB(name)
 
         elif clicked_button == "Inc":
-            for score_data in self.__scdb:
-                if score_data["Name"] == name:
-                    score_data["Score"] = str(int(score_data["Score"]) + int(amount))
+            if amount != "":
+                for score_data in self.__scdb:
+                    if score_data["Name"] == name:
+                        score_data["Score"] = str(int(score_data["Score"]) + int(amount))
             self.showScoreDB()
 
         elif clicked_button == "Show":
@@ -144,4 +158,3 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
     window = ScoreDBWindow(scoredb)
     sys.exit(app.exec_())
- 
