@@ -12,13 +12,13 @@ image_width = 640
 scan_width, scan_height = 200, 20
 lmid, rmid = scan_width, image_width - scan_width
 #area_width, area_height = 20, 10
-area_width, area_height = 3, 3
+area_width, area_height = 10, 10
 # pixel of both side is 3 pixels
 #roi_vertical_pos = 430
-roi_vertical_pos = 290
+roi_vertical_pos = 310
 row_begin = (scan_height - area_height) // 2
 row_end = row_begin + area_height
-pixel_cnt_threshold = 0.8 * area_width * area_height
+pixel_cnt_threshold = 0.5 * area_width * area_height
 
 while True:
     ret, frame = cap.read()
@@ -38,14 +38,19 @@ while True:
     for i in range(roi_vertical_pos, roi_vertical_pos + scan_height):
         for j in range(len(frame[0]) // 3):
             left_hsv_sum += frame[i][j][2]
-    left_value_threshold = min([(left_hsv_sum // (scan_height * len(frame[0]) // 3)) * 1.5, 255])
+    left_average = left_hsv_sum // (scan_height * len(frame[0]) // 3)
+#    left_value_threshold = min([left_average + 1200000 // (left_average ** 2) + 10, 255])
+#    left_value_threshold = min([(left_hsv_sum // (scan_height * len(frame[0]) // 3)) + 60, 255])
+    left_value_threshold = min([(left_hsv_sum // (scan_height * len(frame[0]) // 3)) // 3 * 2 + 90, 255])
+#135
     print("left: ", left_value_threshold)
     
     right_hsv_sum = 0
     for i in range(roi_vertical_pos, roi_vertical_pos + scan_height):
         for j in range(len(frame[0]) // 3 * 2, len(frame[0])):
             right_hsv_sum += frame[i][j][2]
-    right_value_threshold = min([(right_hsv_sum // (scan_height * len(frame[0]) // 3)) * 1.5, 255])
+#    right_value_threshold = min([(right_hsv_sum // (scan_height * len(frame[0]) // 3)) + 60, 255])
+    right_value_threshold = min([(left_hsv_sum // (scan_height * len(frame[0]) // 3)) // 3 * 2 + 90, 255])
     print("right: ", right_value_threshold)
     #
 
@@ -58,12 +63,12 @@ while True:
 
     left_bin = cv2.inRange(hsv, left_lbound, ubound)
     left_bin = cv2.GaussianBlur(left_bin, (3, 3), 0)
-    left_bin = cv2.GaussianBlur(left_bin, (3, 3), 0)
+#    left_bin = cv2.GaussianBlur(left_bin, (3, 3), 0)
     right_bin = cv2.inRange(hsv, right_lbound, ubound)
     right_bin = cv2.GaussianBlur(right_bin, (3, 3), 0)
-    right_bin = cv2.GaussianBlur(right_bin, (3, 3), 0)
+#    right_bin = cv2.GaussianBlur(right_bin, (3, 3), 0)
     #bin = cv2.inRange(hsv, lbound, ubound)
-    view = cv2.cvtColor(right_bin, cv2.COLOR_GRAY2BGR)
+    view = cv2.cvtColor(left_bin, cv2.COLOR_GRAY2BGR)
     
     left, right = -1, -1
 
@@ -109,7 +114,7 @@ while True:
     cv2.imshow("origin", frame)
     cv2.imshow("view", view)
 
-    #time.sleep(0.03)
+#    time.sleep(0.01)
 
 cap.release()
 cv2.destroyAllWindows()
