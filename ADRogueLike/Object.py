@@ -11,7 +11,9 @@ class ObjectState(Enum):
 
 class Object:
     def __init__(self, image, x_pos, y_pos):
-        if isinstance(image, str):
+        if isinstance(image, QImage):
+            self.__image = array([image])
+        elif isinstance(image, str):
             self.__image = array([QImage(image)])
         else:
             self.__image = array([QImage(i) for i in image])

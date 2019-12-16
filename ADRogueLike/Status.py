@@ -1,6 +1,7 @@
 import random
 from enum import Enum
 from abc import abstractmethod
+from PyQt5.QtGui import QImage
 
 
 class StatusList(Enum):
@@ -12,6 +13,9 @@ class StatusList(Enum):
     WEAKNESS = 5
     VULNERABLE = 6
     BLEEDING = 7
+    TOUGHNESS = 8
+    STRENGTH = 9
+    EAGLE_EYE = 10
 
 
 class StatusState(Enum):
@@ -20,9 +24,10 @@ class StatusState(Enum):
 
 
 class Status:
-    def __init__(self, duration):
+    def __init__(self, duration, image=None):
         self.__duration = duration
         self.__state = StatusState.EXIST
+        self.__image = QImage(image)
 
     def process_status(self, character):
         self.effect(character)
@@ -46,8 +51,15 @@ class Status:
     def state(self):
         return self.__state
 
+    @property
+    def image(self):
+        return self.__image
+
 
 class Poison(Status):
+    def __init__(self, duration):
+        super().__init__(duration, "image/status/poison.png")
+
     def effect(self, character):
         character.get_damage(damage=1, penetration=1.0)
 
@@ -63,6 +75,33 @@ class Vulnerable(Status):
 
 
 class Paralyze(Status):
+    def __init__(self, duration):
+        super().__init__(duration, "image/status/paralyze.png")
+
     def effect(self, character):
         if random.randint(0, 2) == 0:
             character.is_movable = False
+
+
+class Toughness(Status):
+    def __init__(self, duration):
+        super().__init__(duration, "image/status/toughness.png")
+
+    def effect(self, character):
+        character.multiply_arm(1.5)
+
+
+class Strength(Status):
+    def __init__(self, duration):
+        super().__init__(duration, "image/status/strength.png")
+
+    def effect(self, character):
+        character.multiply_damage(1.5)
+
+
+class EagleEye(Status):
+    def __init__(self, duration):
+        super().__init__(duration, "image/status/eagle_eye.png")
+
+    def effect(self, character):
+        pass

@@ -3,25 +3,27 @@ from PyQt5.QtCore import QRect
 from PyQt5.QtWidgets import QLabel
 from PyQt5.QtWidgets import QGridLayout
 from PyQt5.QtGui import QPixmap, QPainter
-from Tile import TileImageList
+from Tile import TileImageList, TilesEnum
 
 
 class View:
     def __init__(self):
-        self.__TilePixList = array([QPixmap(image).scaled(96, 96) for image in TileImageList])
-
-        self.__width = 7
-        self.__height = 7
+        self.__tile_size = 72
+        self.__width = 11
+        self.__height = 11
         self.__x_pos = 15
         self.__y_pos = 15
+        self.__multiplier = 1.0
 
+        self.__TilePixList = array(
+            [QPixmap(image).scaled(self.tile_size, self.tile_size) for image in TileImageList])
         self.__layout = QGridLayout()
         self.__layout.setSpacing(0)
 
-        self.__view = array([[None] * self.__height] * self.__width)
+        self.__view = array([[None] * self.height] * self.width)
 
-        for x in range(self.__width):
-            for y in range(self.__height):
+        for x in range(self.width):
+            for y in range(self.height):
                 self.__view[x][y] = QLabel()
                 self.__layout.addWidget(self.__view[x][y], y, x)
 
@@ -62,27 +64,61 @@ class View:
 
         painter = QPainter()
         painter.begin(tile_pixmap)
-        painter.drawImage(QRect(28, 32, 48, 48), player.weapon.image)
+        multiplier = self.tile_size / 96
+        if player.weapon is not None:
+            painter.drawImage(QRect(28 * multiplier, 32 * multiplier,
+                                    48 * multiplier, 48 * multiplier), player.weapon.image)
         painter.end()
 
         self.__view[x_pos_in_view][y_pos_in_view].setPixmap(tile_pixmap)
 
     def update_view(self, drawing_map):
-        for x in range(self.__width):
-            for y in range(self.__height):
+        for x in range(self.width):
+            for y in range(self.height):
                 map_x = self.left_x_pos + x
                 map_y = self.top_y_pos + y
-                self.__view[x][y].setPixmap(self.__TilePixList[drawing_map[map_x][map_y]])
 
-                tile_name = "image/separated_wall_tile"
-                separated_tile_list = [tile_name + str(number) for number in range(1, 10)]
+                if drawing_map[map_x][map_y] != TilesEnum.WALL.value:
+                    self.__view[x][y].setPixmap(self.__TilePixList[drawing_map[map_x][map_y]])
 
-                connected_cnt = [0] * 9
-                direction_list = [[[1, 0], [2, 5, 8]], [[0, 1], [0, 1, 2]], [[-1, 0], [0, 3, 6]], [[0, -1], [6, 7, 8]]]
-                for direction, tile_number_list in direction_list:
-                    if drawing_map[map_x - direction[0]][map_y - direction[1]] == drawing_map[map_x][map_y]:
-                        for number in tile_number_list:
-                            connected_cnt[number] += 1
+                else:
+                    tile_name = "image/separated_wall_tile/wall_tile"
+                    separated_tile_list = [tile_name + str(number) + ".png" for number in range(1, 10)]
+
+                    tile_pixmap = QPixmap(self.__TilePixList[TilesEnum.WALL.value])
+                    separated_tile = [-1] * 9
+                    direction_list = [[1, 0], [0, -1], [-1, 0], [0, 1]]
+                    separated_tile[4] = 4
+                    for number, direction in zip([5, 1, 3, 7], direction_list):
+                        if drawing_map[map_x + direction[0]][map_y + direction[1]] == drawing_map[map_x][map_y]:
+                            separated_tile[number] = 4
+                        else:
+                            separated_tile[number] = number
+
+                    for number, tile_numbers, index in\
+                            zip([2, 0, 6, 8], [[5, 1, 2], [1, 3, 0], [3, 7, 6], [7, 5, 8]], range(4)):
+                        if drawing_map[map_x + direction_list[index][0]][map_y + direction_list[index][1]]\
+                                == drawing_map[map_x][map_y]:
+                            separated_tile[number] = tile_numbers[1]
+                        if drawing_map[map_x + direction_list[(index + 1) % 4][0]]\
+                                [map_y + direction_list[(index + 1) % 4][1]] == drawing_map[map_x][map_y]:
+                            if separated_tile[number] == -1:
+                                separated_tile[number] = tile_numbers[0]
+                            else:
+                                separated_tile[number] = 4
+                        if separated_tile[number] == -1:
+                            separated_tile[number] = tile_numbers[2]
+
+                    painter = QPainter()
+                    painter.begin(tile_pixmap)
+                    for number in range(9):
+                        tile_x = number % 3
+                        tile_y = int(number / 3)
+                        painter.drawPixmap(QRect(tile_x * self.tile_size / 3, tile_y * self.tile_size / 3,
+                                                 self.tile_size / 3 + 0.99, self.tile_size / 3 + 0.99),
+                                           QPixmap(separated_tile_list[separated_tile[number]]))
+                    painter.end()
+                    self.__view[x][y].setPixmap(tile_pixmap)
 
     def is_out_of_view(self, x_pos, y_pos):
         if x_pos < self.left_x_pos\
@@ -101,27 +137,56 @@ class View:
 
     @property
     def left_x_pos(self):
-        return self.__x_pos - self.__width // 2
+        return self.__x_pos - self.width // 2
 
     @property
     def top_y_pos(self):
-        return self.__y_pos - self.__height // 2
+        return self.__y_pos - self.height // 2
 
     @property
     def right_x_pos(self):
-        return self.__x_pos + self.__width // 2
+        return self.__x_pos + self.width // 2
 
     @property
     def bottom_y_pos(self):
-        return self.__y_pos + self.__height // 2
+        return self.__y_pos + self.height // 2
 
     @property
     def width(self):
-        return self.__width
+        return int(self.__width * self.__multiplier)
+
+    @property
+    def height(self):
+        return int(self.__height * self.__multiplier)
 
     @property
     def position(self):
         return self.__x_pos, self.__y_pos
+
+    @property
+    def tile_size(self):
+        return self.__tile_size / self.__multiplier
+
+    @property
+    def multiplier(self):
+        return self.__multiplier
+
+    @multiplier.setter
+    def multiplier(self, multiplier):
+        if multiplier == 0.0:
+            raise
+        if self.multiplier != multiplier:
+            for x in range(self.width):
+                for y in range(self.height):
+                    self.__view[x][y].deleteLater()
+            self.__multiplier = multiplier
+            self.__view = array([[None] * self.height] * self.width)
+            for x in range(self.width):
+                for y in range(self.height):
+                    self.__view[x][y] = QLabel()
+                    self.__layout.addWidget(self.__view[x][y], y, x)
+            self.__TilePixList = array(
+                [QPixmap(image).scaled(self.tile_size + 0.99, self.tile_size + 0.99) for image in TileImageList])
 
     @position.setter
     def position(self, position):
@@ -132,10 +197,6 @@ class View:
         if width < 1:
             raise
         self.__width = width
-
-    @property
-    def height(self):
-        return self.__height
 
     @height.setter
     def height(self, height):

@@ -6,6 +6,7 @@ from Status import StatusState
 import Status
 from Structure import Structure
 from Equipment import Weapon, Armor
+from DroppedItem import DroppedItem
 
 
 class Character(Object):
@@ -33,8 +34,10 @@ class Character(Object):
             if type(s) == type(status):
                 if s.duration < status.duration:
                     s.duration = status.duration
-                break
+                return False
         self.__status += [status]
+        status.effect(self)
+        return True
 
     def process_status(self):
         self.__damage_multiplier = 1.0
@@ -54,6 +57,7 @@ class Character(Object):
             return False
 
         current_map = game.map
+        character_list = game.character_list
         object_list = game.object_list
 
         x_pos = self.x_pos + dx
@@ -61,18 +65,19 @@ class Character(Object):
 
         if TileSolidState[current_map[x_pos][y_pos]]:
             return False
-        for obj in object_list:
+        for obj in object_list + character_list:
             if (x_pos, y_pos) == obj.position:
-                if self.is_enemy(obj):
-                    obj.get_damage(self.damage)
-                if self.is_interactive_structure(obj):
-                    obj.touch_event(game, self)
-                return False
+                if type(obj) != DroppedItem:
+                    if self.is_enemy(obj):
+                        obj.get_damage(self.damage)
+                    elif self.is_interactive_structure(obj):
+                        obj.touch_event(game, self)
+                    return False
 
         self.position = x_pos, y_pos
         return True
 
-    def get_damage(self, damage, penetration=0):
+    def get_damage(self, damage, penetration=0.0):
         self.__hp -= max(int(damage - self.arm * (1.0 - penetration)), 1)
         if self.__hp <= 0:
             self.die()
@@ -122,6 +127,24 @@ class Character(Object):
     @property
     def stat_arm(self):
         return self.__stat_arm
+
+    @stat_hp.setter
+    def stat_hp(self, stat_hp):
+        if stat_hp <= 0:
+            raise
+        self.__stat_hp = stat_hp
+
+    @stat_str.setter
+    def stat_str(self, stat_str):
+        if stat_str < 0:
+            raise
+        self.__stat_str = stat_str
+
+    @stat_arm.setter
+    def stat_arm(self, stat_arm):
+        if stat_arm < 0:
+            raise
+        self.__stat_arm = stat_arm
 
     @property
     def hp(self):
